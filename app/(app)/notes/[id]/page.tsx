@@ -10,6 +10,7 @@ import ItemActions from "@/app/components/ItemActions";
 import { getNoteDetail } from "@/lib/data/noteDetail";
 import TagContainer from "@/app/components/forumpost/TagContainer";
 import { absoluteUrl, buildKeywords, DEFAULT_KEYWORDS } from "@/lib/seo";
+import { AskTutorButton } from "@/app/components/study-assistant/AskTutorButton";
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
@@ -134,6 +135,7 @@ async function PdfViewerPage({params}: { params: Promise<{ id: string }> }) {
                     <PDFViewerClient fileUrl={note.fileUrl}/>
                 </div>
             </div>
+            <AskTutorButton scope={{ type: "NOTE", id: note.id }} label={title} />
         </div>
     );
 

@@ -2,6 +2,7 @@ import React, { Suspense } from "react";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import "@/app/globals.css";
+import "katex/dist/katex.min.css";
 import UpsellToast from "@/components/ui/UpsellToast";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata } from "next";

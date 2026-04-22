@@ -18,6 +18,7 @@ import { parsePaperTitle } from "@/lib/paperTitle";
 import { getRelatedPastPapersByCourseCode } from "@/lib/data/pastPapers";
 import prisma from "@/lib/prisma";
 import { auth } from "@/app/auth";
+import { AskTutorButton } from "@/app/components/study-assistant/AskTutorButton";
 
 function isValidSlot(str: string): boolean {
     const regex = /^[A-G]\d$/;
@@ -204,6 +205,10 @@ async function PdfViewerPage({params}: {params: Promise<{ id: string }>}) {
                     {relatedSection}
                 </div>
             ) : null}
+            <AskTutorButton
+                scope={{ type: "PAST_PAPER", id: paper.id }}
+                label={displayTitle}
+            />
         </div>
     );
 }

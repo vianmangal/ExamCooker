@@ -1,7 +1,8 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant can-hover (@media (hover: hover) and (pointer: fine));
-  
+
 :root {
     --foreground-rgb: 0, 0, 0;
     --background-start-rgb: 214, 219, 220;
@@ -26,34 +27,197 @@
     html {
         @apply scroll-smooth;
     }
-    h1 {
+    :not([data-study-chat]) h1 {
         @apply sm:text-5xl font-extrabold text-4xl;
     }
-    h2 {
+    :not([data-study-chat]) h2 {
         @apply sm:text-4xl font-extrabold text-3xl;
     }
-    h3 {
+    :not([data-study-chat]) h3 {
         @apply sm:text-3xl font-extrabold text-xl;
     }
-    h4 {
+    :not([data-study-chat]) h4 {
         @apply sm:text-2xl font-extrabold text-lg;
     }
-    h5 {
+    :not([data-study-chat]) h5 {
         @apply sm:text-xl font-medium text-base;
     }
-    h6 {
+    :not([data-study-chat]) h6 {
         @apply sm:text-lg text-sm;
     }
-    p {
+    :not([data-study-chat]) p {
         @apply sm:text-base text-xs;
     }
 }
 
 .no-scrollbar {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none;    /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 .no-scrollbar::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+    display: none;
+}
+
+@property --trail-angle {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 0deg;
+}
+
+.border-trail-wrapper {
+    position: relative;
+    isolation: isolate;
+}
+
+.border-trail-wrapper::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(
+        from var(--trail-angle),
+        transparent 0deg,
+        var(--trail-color, #4db3d6) 20deg,
+        transparent 60deg
+    );
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: border-trail-spin 2.6s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes border-trail-spin {
+    to {
+        --trail-angle: 360deg;
+    }
+}
+
+@keyframes text-shimmer-frames {
+    0% {
+        background-position: 200% center;
+    }
+    100% {
+        background-position: -200% center;
+    }
+}
+
+.text-shimmer {
+    background: linear-gradient(
+        90deg,
+        rgba(12, 18, 34, 0.4) 0%,
+        rgba(12, 18, 34, 0.95) 50%,
+        rgba(12, 18, 34, 0.4) 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: text-shimmer-frames 2.4s linear infinite;
+}
+
+.dark .text-shimmer {
+    background: linear-gradient(
+        90deg,
+        rgba(213, 213, 213, 0.4) 0%,
+        rgba(213, 213, 213, 0.95) 50%,
+        rgba(213, 213, 213, 0.4) 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+[data-study-chat] .prose {
+    --tw-prose-body: #0c1222;
+    --tw-prose-headings: #0c1222;
+    --tw-prose-links: #0f7fa3;
+    --tw-prose-bold: #0c1222;
+    --tw-prose-counters: rgba(12, 18, 34, 0.55);
+    --tw-prose-bullets: rgba(12, 18, 34, 0.35);
+    --tw-prose-hr: rgba(12, 18, 34, 0.12);
+    --tw-prose-quotes: #0c1222;
+    --tw-prose-quote-borders: rgba(77, 179, 214, 0.4);
+    --tw-prose-captions: rgba(12, 18, 34, 0.55);
+    --tw-prose-code: #0c1222;
+    --tw-prose-pre-code: #e8e8e8;
+    --tw-prose-pre-bg: #0c1222;
+    --tw-prose-th-borders: rgba(12, 18, 34, 0.12);
+    --tw-prose-td-borders: rgba(12, 18, 34, 0.08);
+    font-size: 0.9375rem;
+    line-height: 1.65;
+}
+
+.dark [data-study-chat] .prose {
+    --tw-prose-body: #d5d5d5;
+    --tw-prose-headings: #ffffff;
+    --tw-prose-links: #5fe5c7;
+    --tw-prose-bold: #ffffff;
+    --tw-prose-counters: rgba(213, 213, 213, 0.55);
+    --tw-prose-bullets: rgba(213, 213, 213, 0.35);
+    --tw-prose-hr: rgba(213, 213, 213, 0.12);
+    --tw-prose-quotes: #d5d5d5;
+    --tw-prose-quote-borders: rgba(59, 244, 199, 0.4);
+    --tw-prose-captions: rgba(213, 213, 213, 0.55);
+    --tw-prose-code: #d5d5d5;
+    --tw-prose-pre-code: #e8e8e8;
+    --tw-prose-pre-bg: #05090f;
+    --tw-prose-th-borders: rgba(213, 213, 213, 0.12);
+    --tw-prose-td-borders: rgba(213, 213, 213, 0.08);
+}
+
+[data-study-chat] .prose :where(p):not(:where([class~="not-prose"] *)) {
+    margin-top: 0.65em;
+    margin-bottom: 0.65em;
+}
+
+[data-study-chat] .prose :where(h1, h2, h3, h4):not(:where([class~="not-prose"] *)) {
+    letter-spacing: -0.01em;
+    font-weight: 700;
+}
+
+[data-study-chat] .prose :where(code):not(:where([class~="not-prose"] *)):not(pre code) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.82em;
+    background: rgba(12, 18, 34, 0.06);
+    border: 1px solid rgba(12, 18, 34, 0.08);
+    border-radius: 0.35rem;
+    padding: 0.1em 0.35em;
+}
+
+.dark [data-study-chat] .prose :where(code):not(:where([class~="not-prose"] *)):not(pre code) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-study-chat] .prose :where(pre):not(:where([class~="not-prose"] *)) {
+    border-radius: 0.75rem;
+    padding: 0.85rem 1rem;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+}
+
+[data-study-chat] .prose :where(pre code):not(:where([class~="not-prose"] *)) {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+[data-study-chat] .prose :where(blockquote):not(:where([class~="not-prose"] *)) {
+    font-style: normal;
+    font-weight: 400;
+    quotes: none;
+}
+
+[data-study-chat] .prose :where(blockquote p:first-of-type)::before,
+[data-study-chat] .prose :where(blockquote p:last-of-type)::after {
+    content: none;
 }

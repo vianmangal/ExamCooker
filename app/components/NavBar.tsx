@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "@/app/components/common/AppImage";
 import { usePathname } from "next/navigation";
 import Loading from "@/app/components/LoadingOverlay";
+import { Bot } from "lucide-react";
 
 const Tooltip = ({
   children,
@@ -209,6 +210,27 @@ const NavBar: React.FC<{ isNavOn: boolean; toggleNavbar: () => void }> = ({
               alt="Quiz"
               disableAnim={pathname == "/quiz"}
             />
+          </Link>
+          <Link
+            href={"/study"}
+            passHref
+            className={`${pathname?.startsWith("/study") ? "bg-[#ffffff]/20" : ""}`}
+          >
+            <Tooltip content="Tutor">
+              <div
+                onClick={handleLinkClick}
+                className={`flex gap-2 m-2 group ${isNavOn ? "block" : "hidden"}`}
+              >
+                <span className="inline-flex h-[25px] w-[24px] items-center justify-center text-black dark:text-[#D5D5D5] transition-transform transform-gpu can-hover:group-hover:scale-110 can-hover:group-hover:-translate-y-1 can-hover:group-hover:rotate-[-5deg]">
+                  <Bot className="h-[22px] w-[22px]" />
+                </span>
+                <p
+                  className={`transition-all text-black font-extrabold can-hover:group-hover:-translate-y-1 dark:text-[#D5D5D5] ${isExpanded ? "block" : "hidden"}`}
+                >
+                  Tutor
+                </p>
+              </div>
+            </Tooltip>
           </Link>
         </div>
         <div />

@@ -11,6 +11,7 @@ import { buildKeywords, DEFAULT_KEYWORDS } from "@/lib/seo";
 import { normalizeCourseCode } from "@/lib/courseTags";
 import { getCourseExamCounts } from "@/lib/data/courseExams";
 import { getSyllabusByCourseCode } from "@/lib/data/syllabus";
+import { AskTutorButton } from "@/app/components/study-assistant/AskTutorButton";
 
 const PREVIEW_PAGE_SIZE = 6;
 
@@ -202,6 +203,10 @@ export default async function CourseDetailPage({
                     </p>
                 )}
             </div>
+            <AskTutorButton
+                scope={{ type: "COURSE", code: course.code }}
+                label={buildCourseTitle(course)}
+            />
         </div>
     );
 }

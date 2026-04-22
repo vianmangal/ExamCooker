@@ -46,6 +46,8 @@ export default function ClientSide({
         });
     };
 
+    const isStudyRoute = pathname?.startsWith("/study") ?? false;
+
     return (
         <GuestPromptProvider>
             <BookmarksProvider initialBookmarks={initialBookmarks}>
@@ -68,7 +70,7 @@ export default function ClientSide({
                                 isNavOn={isNavOn}
                             />
                             {children}
-                            <HomeFooter />
+                            {!isStudyRoute && <HomeFooter />}
                         </div>
                     </main>
                 </div>
