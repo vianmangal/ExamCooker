@@ -9,10 +9,9 @@ import SmartCourseGrid from "@/app/components/past_papers/SmartCourseGrid";
 import CoursePagination from "@/app/components/past_papers/CoursePagination";
 import RecentPaperStrip from "@/app/components/past_papers/RecentPaperStrip";
 import PastPapersCourseSearch from "@/app/components/past_papers/PastPapersCourseSearch";
-import UpcomingExamsStrip from "@/app/components/past_papers/UpcomingExamsStrip";
+import ExamsMarquee from "@/app/(app)/home/ExamsMarquee";
 import {
     getCatalogStats,
-    getCourseGrid,
     getPopularCourseGrid,
     getRecentPapers,
     getSearchableCourses,
@@ -103,7 +102,7 @@ function HeroStats({
                     {idx < items.length - 1 && (
                         <span
                             aria-hidden="true"
-                            className="ml-3 hidden text-black/30 dark:text-[#D5D5D5]/25 sm:inline"
+                            className="ml-3 hidden text-white sm:inline"
                         >
                             ·
                         </span>
@@ -199,7 +198,7 @@ function CourseGridSectionSkeleton({ search }: { search: string }) {
         <section className="flex flex-col gap-4">
             <header className="flex items-end justify-between gap-3">
                 <h2 className="text-lg font-bold uppercase tracking-wider text-black dark:text-[#D5D5D5] sm:text-xl">
-                    {search ? "Matches" : "All courses"}
+                    Matches
                 </h2>
                 {!search && (
                     <span className="text-sm text-black/50 dark:text-[#D5D5D5]/50">
@@ -243,11 +242,10 @@ async function CourseGridSection({
     params: { search?: string; page?: string };
 }) {
     const search = params.search?.trim() || "";
+    if (!search) return null;
     const rawPage = Number.parseInt(params.page || "1", 10) || 1;
 
-    const courses: CourseGridItem[] = search
-        ? await searchCourseGrid(search)
-        : await getCourseGrid();
+    const courses: CourseGridItem[] = await searchCourseGrid(search);
 
     const totalPages = Math.max(1, Math.ceil(courses.length / PAGE_SIZE));
     const page = validatePage(rawPage, totalPages);
@@ -280,7 +278,7 @@ async function CourseGridSection({
             <section className="flex flex-col gap-4">
                 <header className="flex items-end justify-between gap-3">
                     <h2 className="text-lg font-bold uppercase tracking-wider text-black dark:text-[#D5D5D5] sm:text-xl">
-                        {search ? `${courses.length} match${courses.length === 1 ? "" : "es"}` : "All courses"}
+                        {`${courses.length} match${courses.length === 1 ? "" : "es"}`}
                     </h2>
                     {!search && (
                         <span className="text-sm text-black/60 dark:text-[#D5D5D5]/60">
@@ -315,9 +313,9 @@ async function RecentSection() {
 }
 
 async function UpcomingSection() {
-    const upcomingExams = await getUpcomingExams(12);
+    const upcomingExams = await getUpcomingExams(16);
     if (upcomingExams.length === 0) return null;
-    return <UpcomingExamsStrip items={upcomingExams} emptyPrompt={null} />;
+    return <ExamsMarquee items={upcomingExams} />;
 }
 
 export default async function PastPapersPage({
@@ -376,9 +374,15 @@ export default async function PastPapersPage({
                         </Suspense>
                     )}
 
-                    <Suspense fallback={<CourseGridSectionSkeleton search={search} />}>
-                        <CourseGridSection params={params} />
-                    </Suspense>
+                    {search ? (
+                        <Suspense fallback={<CourseGridSectionSkeleton search={search} />}>
+                            <CourseGridSection params={params} />
+                        </Suspense>
+                    ) : (
+                        <Suspense fallback={null}>
+                            <UpcomingSection />
+                        </Suspense>
+                    )}
 
                     {!search && (
                         <Suspense fallback={null}>
