@@ -1,11 +1,13 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "@/app/components/common/AppImage";
 import { usePathname } from "next/navigation";
 import ThemeToggleSwitch from "@/app/components/common/ThemeToggle";
 import { SignOut } from "@/app/components/sign-out";
-import { startGoogleSignIn } from "@/lib/auth-origin";
+import VoiceAgentButton from "@/app/components/voice/VoiceAgentButton";
+import { startGoogleSignIn } from "@/lib/start-google-sign-in";
 import { useGuestPrompt } from "@/app/components/GuestPromptProvider";
 
 type MenuLink = {
@@ -22,7 +24,6 @@ const LINKS: MenuLink[] = [
   { href: "/syllabus", svgSource: "/assets/SyllabusLogo.svg", alt: "Syllabus" },
   // { href: "/forum", svgSource: "/assets/ForumIcon.svg", alt: "Forum" },
   { href: "/resources", svgSource: "/assets/BookIcon.svg", alt: "Resources" },
-  // { href: "/favourites", svgSource: "/assets/NavFavouriteIcon.svg", alt: "Favourites" },
   { href: "/quiz", svgSource: "/assets/QuizIcon.svg", alt: "Quiz" },
 ];
 
@@ -31,16 +32,43 @@ type Props = {
   toggleNavbar: () => void;
 };
 
+const VoiceAgentEntry = dynamic(
+  () => import("@/app/components/voice/VoiceAgentEntry"),
+  {
+    ssr: false,
+    loading: () => (
+      <VoiceAgentButton
+        buttonLabel="Starting the voice guide"
+        disabled
+        onClick={() => undefined}
+        runtime={{
+          activity: "connecting",
+          connected: false,
+          muted: false,
+        }}
+      />
+    ),
+  },
+);
+
 const NavBar: React.FC<Props> = ({ isNavOn, toggleNavbar }) => {
   const pathname = usePathname();
-  const { isAuthed, session } = useGuestPrompt();
+  const { isAuthed, requireAuth, session } = useGuestPrompt();
   const [showProfile, setShowProfile] = useState(false);
+  const [profileMenuPosition, setProfileMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const [voiceRuntimeRequested, setVoiceRuntimeRequested] = useState(false);
+  const [voiceStartToken, setVoiceStartToken] = useState(0);
   const [hoveredTooltip, setHoveredTooltip] = useState<{
     content: string;
     top: number;
     left: number;
   } | null>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -65,6 +93,51 @@ const NavBar: React.FC<Props> = ({ isNavOn, toggleNavbar }) => {
     };
   }, []);
 
+  const updateProfileMenuPosition = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    const button = profileButtonRef.current;
+    if (!button) return;
+
+    const buttonRect = button.getBoundingClientRect();
+    const menuRect = profileMenuRef.current?.getBoundingClientRect();
+    const menuWidth = menuRect?.width ?? 224;
+    const menuHeight = menuRect?.height ?? 120;
+    const margin = 12;
+    const gap = 12;
+
+    const top = Math.min(
+      Math.max(buttonRect.top, margin),
+      window.innerHeight - menuHeight - margin,
+    );
+    const left = Math.min(
+      buttonRect.right + gap,
+      window.innerWidth - menuWidth - margin,
+    );
+
+    setProfileMenuPosition({
+      top,
+      left: Math.max(left, margin),
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!showProfile) {
+      setProfileMenuPosition(null);
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(updateProfileMenuPosition);
+    window.addEventListener("resize", updateProfileMenuPosition);
+    window.addEventListener("scroll", updateProfileMenuPosition, true);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", updateProfileMenuPosition);
+      window.removeEventListener("scroll", updateProfileMenuPosition, true);
+    };
+  }, [showProfile, updateProfileMenuPosition]);
+
   const showTooltip = (
     event: React.MouseEvent<HTMLDivElement> | React.FocusEvent<HTMLDivElement>,
     content: string,
@@ -82,6 +155,22 @@ const NavBar: React.FC<Props> = ({ isNavOn, toggleNavbar }) => {
       left: rect.right + 10,
     });
   };
+
+  const handleVoiceClick = useCallback(() => {
+    if (!isAuthed) {
+      requireAuth("use the voice guide");
+      return;
+    }
+
+    setVoiceRuntimeRequested(true);
+    setVoiceStartToken((current) => current + 1);
+  }, [isAuthed, requireAuth]);
+
+  useEffect(() => {
+    const handler = () => handleVoiceClick();
+    window.addEventListener("examcooker:voice-agent-start", handler);
+    return () => window.removeEventListener("examcooker:voice-agent-start", handler);
+  }, [handleVoiceClick]);
 
   return (
     <>
@@ -122,7 +211,7 @@ const NavBar: React.FC<Props> = ({ isNavOn, toggleNavbar }) => {
         className={`fixed top-0 left-0 z-50 h-dvh max-h-dvh w-fit overflow-visible border-r border-black/15 bg-[#C2E6EC] transition-transform duration-200 ease-out dark:border-r-[#D5D5D5]/15 dark:bg-[#0C1222] ${isNavOn ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           }`}
       >
-        <div className="flex h-full max-h-dvh w-fit flex-col items-center justify-between overflow-y-auto overscroll-contain p-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
+        <div className="flex h-full max-h-dvh w-fit flex-col items-center justify-between overflow-y-auto overscroll-contain p-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] lg:pb-6">
           <div className="flex w-full min-h-[2.5rem] items-center justify-start px-1">
             <button
               type="button"
@@ -181,21 +270,53 @@ const NavBar: React.FC<Props> = ({ isNavOn, toggleNavbar }) => {
             })}
           </div>
 
-          <div className="mb-2 flex flex-col items-center gap-2">
+          <div className="relative z-10 mb-1 flex flex-col items-center gap-2">
+            <div className="group flex">
+              {voiceRuntimeRequested ? (
+                <VoiceAgentEntry startToken={voiceStartToken} />
+              ) : (
+                <VoiceAgentButton
+                  buttonLabel="Start the voice guide"
+                  onClick={handleVoiceClick}
+                  runtime={{
+                    activity: "idle",
+                    connected: false,
+                    muted: false,
+                  }}
+                />
+              )}
+            </div>
             <ThemeToggleSwitch />
             {isAuthed ? (
-              <div className="relative" ref={profileRef}>
+              <div className="relative z-10" ref={profileRef}>
                 <button
+                  ref={profileButtonRef}
                   type="button"
                   title="Profile"
                   aria-label="Profile"
                   onClick={() => setShowProfile((v) => !v)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-black/15 bg-white text-xs font-bold text-black/70 transition-colors duration-200 hover:border-black/40 hover:text-black dark:border-[#D5D5D5]/20 dark:bg-transparent dark:text-[#D5D5D5]/70 dark:hover:border-[#3BF4C7]/60 dark:hover:text-[#3BF4C7]"
+                  className="pointer-events-auto flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-black/15 bg-white text-xs font-bold text-black/70 transition-colors duration-200 hover:border-black/40 hover:text-black dark:border-[#D5D5D5]/20 dark:bg-transparent dark:text-[#D5D5D5]/70 dark:hover:border-[#3BF4C7]/60 dark:hover:text-[#3BF4C7]"
                 >
                   {(session?.user?.name ?? "?").trim().charAt(0).toUpperCase() || "?"}
                 </button>
                 {showProfile && (
-                  <div className="absolute bottom-0 left-full ml-3 w-56 rounded-md border border-black/10 bg-white p-3 shadow-lg dark:border-[#D5D5D5]/15 dark:bg-[#121B31]">
+                  <div
+                    ref={profileMenuRef}
+                    className="fixed z-[90] w-56 rounded-md border border-black/10 bg-white p-3 shadow-lg dark:border-[#D5D5D5]/15 dark:bg-[#121B31]"
+                    style={
+                      profileMenuPosition
+                        ? {
+                          top: profileMenuPosition.top,
+                          left: profileMenuPosition.left,
+                          maxHeight: "calc(100dvh - 1.5rem)",
+                        }
+                        : {
+                          top: 12,
+                          left: 12,
+                          visibility: "hidden",
+                        }
+                    }
+                  >
                     <p className="mb-1 text-sm font-semibold text-black dark:text-[#D5D5D5]">
                       {session?.user?.name}
                     </p>

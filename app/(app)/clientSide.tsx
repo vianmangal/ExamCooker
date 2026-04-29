@@ -2,12 +2,11 @@
 import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import NavBar from "@/app/components/NavBar";
-import BookmarksProvider from "@/app/components/BookmarksProvider";
 import GuestPromptProvider from "@/app/components/GuestPromptProvider";
-import type { Bookmark } from "@/app/actions/Favourites";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import AppImage from "@/app/components/common/AppImage";
 import ExamCookerLogoIcon from "@/public/assets/LogoIcon.svg";
+import { markRenderedRoutePath } from "@/app/components/voice/voiceNavigation";
 
 const NAV_LINKS = [
     { href: "/", label: "Home" },
@@ -24,6 +23,19 @@ function RouteEffects({ onPathChange }: { onPathChange: () => void }) {
     useEffect(() => {
         onPathChange();
     }, [onPathChange, pathname]);
+
+    return null;
+}
+
+function RenderedRouteBeacon() {
+    const pathname = usePathname() ?? "";
+    const searchParams = useSearchParams();
+    const search = searchParams.toString();
+    const routePath = `${pathname}${search ? `?${search}` : ""}`;
+
+    useEffect(() => {
+        markRenderedRoutePath(routePath);
+    }, [routePath]);
 
     return null;
 }
@@ -177,28 +189,10 @@ function ClientShell({
     );
 }
 
-function ClientProviders({
-    children,
-    initialBookmarks,
-}: {
-    children: React.ReactNode;
-    initialBookmarks: Bookmark[];
-}) {
-    return (
-        <GuestPromptProvider>
-            <BookmarksProvider initialBookmarks={initialBookmarks}>
-                {children}
-            </BookmarksProvider>
-        </GuestPromptProvider>
-    );
-}
-
 export default function ClientSide({
     children,
-    initialBookmarks,
 }: {
     children: React.ReactNode;
-    initialBookmarks: Bookmark[];
 }) {
     const [isNavOn, setIsNavOn] = useState(false);
 
@@ -221,15 +215,16 @@ export default function ClientSide({
     const toggleNavbar = () => setIsNavOn((v) => !v);
 
     return (
-        <ClientShell isNavOn={isNavOn} toggleNavbar={toggleNavbar}>
-            <Suspense fallback={children}>
-                <ClientProviders initialBookmarks={initialBookmarks}>
-                    <Suspense fallback={null}>
-                        <RouteEffects onPathChange={handlePathChange} />
-                    </Suspense>
-                    {children}
-                </ClientProviders>
-            </Suspense>
-        </ClientShell>
+        <GuestPromptProvider>
+            <ClientShell isNavOn={isNavOn} toggleNavbar={toggleNavbar}>
+                <Suspense fallback={null}>
+                    <RouteEffects onPathChange={handlePathChange} />
+                </Suspense>
+                {children}
+                <Suspense fallback={null}>
+                    <RenderedRouteBeacon />
+                </Suspense>
+            </ClientShell>
+        </GuestPromptProvider>
     );
 }
