@@ -2,11 +2,11 @@ import React, { Suspense } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import DirectionalTransition from "@/app/components/common/DirectionalTransition";
+import DirectionalTransition from "@/app/components/common/directional-transition";
 import { GradientText } from "@/app/components/landing_page/landing";
-import NotesCourseGridCard from "@/app/components/notes/NotesCourseGridCard";
-import NotesCourseSearch from "@/app/components/notes/NotesCourseSearch";
-import UploadButtonNotes from "@/app/components/UploadButtonNotes";
+import NotesCourseGridCard from "@/app/components/notes/notes-course-grid-card";
+import NotesCourseSearch from "@/app/components/notes/notes-course-search";
+import UploadButtonNotes from "@/app/components/upload-button-notes";
 import {
     getNotesCourseGrid,
     getNotesStats,
@@ -51,7 +51,7 @@ function HeroStats({
                     {idx < items.length - 1 && (
                         <span
                             aria-hidden="true"
-                            className="ml-3 hidden text-black/30 dark:text-[#D5D5D5]/25 sm:inline"
+                            className="ml-3 hidden text-black dark:text-white sm:inline"
                         >
                             ·
                         </span>

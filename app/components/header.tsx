@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import Image from "@/app/components/common/AppImage";
-import profile from "@/public/assets/Profile.svg";
+import Image from "@/app/components/common/app-image";
+import profile from "@/public/assets/profile.svg";
 import { SignOut } from "./sign-out";
-import ThemeToggleSwitch from "./common/ThemeToggle";
+import ThemeToggleSwitch from "./common/theme-toggle";
 import { startGoogleSignIn } from "@/lib/start-google-sign-in";
+import { useGuestPrompt } from "@/app/components/auth-gate";
 
 interface HeaderProps {
   toggleTheme: () => void;
@@ -16,7 +16,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ toggleNavbar, isNavOn }) => {
-  const { data: session } = useSession();
+  const { session } = useGuestPrompt();
   const isAuthed = Boolean(session?.user);
   const [showOverlay, setShowOverlay] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -53,7 +53,7 @@ const Header: React.FC<HeaderProps> = ({ toggleNavbar, isNavOn }) => {
             className="inline-flex h-10 w-10 items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-black/40 dark:focus-visible:ring-[#3BF4C7]/50"
           >
             <Image
-              src="/assets/HamburgerIcon.svg"
+              src="/assets/hamburger-icon.svg"
               alt="Menu"
               width={26}
               height={26}
@@ -117,7 +117,11 @@ const Header: React.FC<HeaderProps> = ({ toggleNavbar, isNavOn }) => {
         ) : (
           <button
             type="button"
-            onClick={() => startGoogleSignIn()}
+            onClick={() =>
+              startGoogleSignIn(undefined, {
+                source: "header",
+              })
+            }
             className="border border-black dark:border-[#D5D5D5] px-3 py-1 text-sm font-semibold bg-[#3BF4C7] text-black dark:bg-[#0C1222] dark:text-[#D5D5D5] hover:-translate-x-0.5 hover:-translate-y-0.5 transition"
           >
             Sign In
