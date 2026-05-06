@@ -3,7 +3,7 @@ import { auth } from "@/app/auth";
 import { GradientText } from "@/app/components/landing_page/landing";
 import ExamCookerLogo from "@/app/components/common/exam-cooker-logo";
 import DirectionalTransition from "@/app/components/common/directional-transition";
-import ExamsMarquee from "./exams-marquee";
+import ExamsMarquee, { ExamsMarqueeFallback } from "./exams-marquee";
 import { getSearchableCourses } from "@/lib/data/course-catalog";
 import { getUpcomingExams } from "@/lib/data/upcoming-exams";
 import CourseSearch from "./course-search";
@@ -81,8 +81,8 @@ const Home = () => {
                             <HomeSearchSection />
                         </div>
 
-                        <div className="pb-4 md:pb-6">
-                            <Suspense fallback={null}>
+                        <div className="ec-home-marquee-offset pb-4 md:pb-6 lg:pb-8">
+                            <Suspense fallback={<ExamsMarqueeFallback />}>
                                 <HomeMarqueeSection />
                             </Suspense>
                         </div>

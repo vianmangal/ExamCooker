@@ -1,5 +1,5 @@
 "use client";
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import NavBar from "@/app/components/nav-bar";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -7,10 +7,13 @@ import AppImage from "@/app/components/common/app-image";
 import ExamCookerLogoIcon from "@/public/assets/logo-icon.svg";
 import { markRenderedRoutePath } from "@/app/components/voice/voice-navigation";
 import MobileTabBar from "@/app/components/mobile-tab-bar";
-import NativeIosTabSync from "@/app/components/native-ios-tab-sync";
 import { NavFromProvider } from "@/app/components/common/nav-from-provider";
 import { APP_NAV_LINKS } from "@/lib/app-nav-links";
 import { MoreHorizontal, X } from "lucide-react";
+import {
+    PaperSplitViewProvider,
+    usePaperSplitView,
+} from "@/app/components/past_papers/paper-split-view";
 
 function RouteEffects({ onPathChange }: { onPathChange: () => void }) {
     const pathname = usePathname();
@@ -35,8 +38,7 @@ function RenderedRouteBeacon() {
     return null;
 }
 
-function MobileLogoLink() {
-    const pathname = usePathname();
+function shouldShowMobileLogo(pathname: string | null) {
     const pathSegments = (pathname ?? "").split("/").filter(Boolean);
     const isHome = pathSegments.length === 0;
     const hasPastPapersBreadcrumbBar =
@@ -48,39 +50,41 @@ function MobileLogoLink() {
     const hasNoteOrPaperBar =
         (pathSegments[0] === "notes" && pathSegments[1] !== undefined) ||
         (pathSegments[0] === "resources" && pathSegments.length >= 2);
-    const hasBreadcrumbBar =
-        hasPastPapersBreadcrumbBar ||
-        hasSyllabusBreadcrumbBar ||
-        hasNoteOrPaperBar;
-    const showMobileLogo = !hasBreadcrumbBar && !isHome;
 
-    if (!showMobileLogo) return null;
+    return !isHome && !hasPastPapersBreadcrumbBar && !hasSyllabusBreadcrumbBar && !hasNoteOrPaperBar;
+}
+
+function MobileStaticLogo() {
+    const pathname = usePathname();
+    const { activePaper, isSupported } = usePaperSplitView();
+
+    if ((activePaper && isSupported) || !shouldShowMobileLogo(pathname)) return null;
 
     return (
-        <Link
-            href="/"
-            aria-label="ExamCooker home"
-            style={{ viewTransitionName: "persistent-mobile-logo" }}
-            className="pointer-events-auto relative flex h-11 max-w-full min-w-0 items-center gap-2.5 rounded-xl border border-black/10 bg-white/90 px-3 text-[15px] font-semibold leading-none text-black shadow-[0_1px_0_rgba(0,0,0,0.04)] backdrop-blur transition-colors hover:border-black/25 dark:border-[#D5D5D5]/15 dark:bg-[#0C1222]/90 dark:text-[#D5D5D5] dark:hover:border-[#3BF4C7]/50"
-        >
-            <AppImage
-                src={ExamCookerLogoIcon}
-                alt="ExamCooker"
-                width={20}
-                height={20}
-                className="h-5 w-5 shrink-0"
-            />
-            <span className="truncate pt-px">
-                Exam
-                <span className="bg-gradient-to-tr from-[#253EE0] to-[#27BAEC] bg-clip-text text-transparent">
-                    Cooker
+        <div className="mobile-static-logo mx-auto flex w-full max-w-7xl px-3 lg:hidden">
+            <Link
+                href="/"
+                aria-label="ExamCooker home"
+                className="inline-flex h-11 max-w-full min-w-0 items-center gap-2 bg-transparent text-[15px] font-semibold leading-none text-black shadow-none dark:text-[#D5D5D5]"
+            >
+                <AppImage
+                    src={ExamCookerLogoIcon}
+                    alt="ExamCooker"
+                    width={20}
+                    height={20}
+                    className="h-5 w-5 shrink-0"
+                />
+                <span className="truncate pt-px">
+                    Exam
+                    <span className="bg-gradient-to-tr from-[#253EE0] to-[#27BAEC] bg-clip-text text-transparent">
+                        Cooker
+                    </span>
                 </span>
-            </span>
-        </Link>
+            </Link>
+        </div>
     );
 }
 
-/** One mobile row: safe-area insets + aligned logo + ⋯ menu (NavBar owns sheet + overlay). */
 function MobileChromeHeader({
     isNavOn,
     toggleNavbar,
@@ -89,15 +93,11 @@ function MobileChromeHeader({
     toggleNavbar: () => void;
 }) {
     return (
-        <header className="pointer-events-none fixed inset-x-0 top-0 z-[60] lg:hidden">
+        <header className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[calc(3.25rem+env(safe-area-inset-top))] translate-y-0 transform-none lg:hidden">
             <div
-                className="pointer-events-none flex items-center gap-2 pb-2 pt-[env(safe-area-inset-top)] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]"
+                className="pointer-events-none flex h-full items-start gap-2 pt-[env(safe-area-inset-top)] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]"
             >
-                <div className="flex min-h-11 min-w-0 flex-1 items-center justify-start">
-                    <Suspense fallback={null}>
-                        <MobileLogoLink />
-                    </Suspense>
-                </div>
+                <div className="min-h-11 min-w-0 flex-1" aria-hidden />
                 <button
                     type="button"
                     onClick={toggleNavbar}
@@ -194,14 +194,16 @@ function ClientShell({
                     >
                         <NavBar isNavOn={isNavOn} toggleNavbar={toggleNavbar} />
                     </Suspense>
-                    <main className="ec-app-main min-w-0 flex-1 pb-[calc(4.25rem+env(safe-area-inset-bottom))] pt-[calc(env(safe-area-inset-top)+3.25rem)] lg:pb-0 lg:pl-14 lg:pt-0">
-                        {children}
+                    <main className="ec-app-main min-w-0 flex-1 pb-[calc(4.25rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)] lg:pb-0 lg:pl-14 lg:pt-0">
+                        <PaperSplitViewProvider>
+                            <Suspense fallback={null}>
+                                <MobileStaticLogo />
+                            </Suspense>
+                            {children}
+                        </PaperSplitViewProvider>
                     </main>
                     <Suspense fallback={null}>
                         <MobileTabBar toolsSheetOpen={isNavOn} />
-                    </Suspense>
-                    <Suspense fallback={null}>
-                        <NativeIosTabSync />
                     </Suspense>
                 </div>
             </NavFromProvider>
@@ -225,17 +227,31 @@ export default function ClientSide({
         return () => desktop.removeEventListener("change", sync);
     }, []);
 
-    const handlePathChange = () => {
+    useEffect(() => {
+        const handleNativeBack = (event: Event) => {
+            if (!isNavOn) return;
+            event.preventDefault();
+            setIsNavOn(false);
+        };
+
+        window.addEventListener("examcooker:native-back", handleNativeBack);
+        return () => window.removeEventListener("examcooker:native-back", handleNativeBack);
+    }, [isNavOn]);
+
+    const handlePathChange = useCallback(() => {
         if (typeof window === "undefined") return;
         if (!window.matchMedia("(min-width: 1024px)").matches) {
             setIsNavOn(false);
         }
-    };
+    }, []);
 
-    const toggleNavbar = () => setIsNavOn((v) => !v);
+    const toggleNavbar = useCallback(() => setIsNavOn((v) => !v), []);
 
     return (
-        <ClientShell isNavOn={isNavOn} toggleNavbar={toggleNavbar}>
+        <ClientShell
+            isNavOn={isNavOn}
+            toggleNavbar={toggleNavbar}
+        >
             <Suspense fallback={null}>
                 <RouteEffects onPathChange={handlePathChange} />
             </Suspense>

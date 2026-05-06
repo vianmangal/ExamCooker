@@ -8,6 +8,7 @@ import {
     markUpsellDismissed,
     pickNextUpsell,
 } from "@/lib/upsells";
+import { useIsMobile } from "@/app/components/ui/use-is-mobile";
 
 const ENTER_MS = 260;
 const UPSELL_AUTO_HIDE_MS = 10_000;
@@ -17,6 +18,7 @@ const ctaClassName =
 
 const UpsellToast = () => {
     const pathname = usePathname();
+    const isMobile = useIsMobile();
     const [upsell, setUpsell] = useState<Upsell | null>(null);
     const [mounted, setMounted] = useState(false);
     const [visible, setVisible] = useState(false);
@@ -26,6 +28,7 @@ const UpsellToast = () => {
     upsellRef.current = upsell;
 
     const isCliPage = pathname === "/cli";
+    const isAuthPage = pathname === "/auth";
 
     const hideToast = useCallback(() => {
         const current = upsellRef.current;
@@ -51,7 +54,7 @@ const UpsellToast = () => {
     }, []);
 
     useEffect(() => {
-        if (isCliPage) return;
+        if (isCliPage || isAuthPage || isMobile) return;
         const next = pickNextUpsell();
         if (!next) return;
         const timer = window.setTimeout(() => {
@@ -59,7 +62,7 @@ const UpsellToast = () => {
             setMounted(true);
         }, UPSELL_SHOW_DELAY_MS);
         return () => window.clearTimeout(timer);
-    }, [isCliPage]);
+    }, [isAuthPage, isCliPage, isMobile]);
 
     useEffect(() => {
         if (!mounted) return;
@@ -70,11 +73,11 @@ const UpsellToast = () => {
     }, [mounted]);
 
     useEffect(() => {
-        if (!isCliPage) return;
+        if (!isCliPage && !isAuthPage && !isMobile) return;
         setVisible(false);
         setMounted(false);
         setUpsell(null);
-    }, [isCliPage]);
+    }, [isAuthPage, isCliPage, isMobile]);
 
     useEffect(() => {
         if (!visible || !upsell) return;
@@ -82,7 +85,7 @@ const UpsellToast = () => {
         return () => window.clearTimeout(timer);
     }, [visible, upsell?.id, hideToast]);
 
-    if (isCliPage || !mounted || !upsell) return null;
+    if (isCliPage || isAuthPage || isMobile || !mounted || !upsell) return null;
 
     const handleLinkCtaClick = () => {
         markUpsellDismissed(upsell.id);

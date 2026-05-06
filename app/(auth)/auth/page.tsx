@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { ChevronLeft } from "lucide-react";
 import { auth } from "@/app/auth";
 import AppImage from "@/app/components/common/app-image";
 import ThemeToggle from "@/app/components/common/theme-toggle";
 import AuthClient from "@/app/(auth)/auth/auth-client";
+import { normalizeAuthCallbackPath } from "@/lib/auth-origin";
 import AcmLogo from "@/public/assets/acm-logo.svg";
 import ExamCookerLogoIcon from "@/public/assets/logo-icon.svg";
 
@@ -21,22 +23,17 @@ function getStringParam(value: string | string[] | undefined) {
     return value ?? "";
 }
 
-function normalizeCallbackUrl(value: string) {
-    const trimmed = value.trim();
-    if (trimmed.startsWith("/") && !trimmed.startsWith("//")) {
-        return trimmed;
-    }
-    try {
-        const url = new URL(trimmed);
-        return `${url.pathname}${url.search}${url.hash}` || "/";
-    } catch {
-        return "/";
-    }
-}
-
 function AuthShell({ children }: { children: React.ReactNode }) {
     return (
         <main className="relative flex h-[100dvh] w-full items-center justify-center overflow-hidden bg-[#C2E6EC] px-5 text-black dark:bg-[#0C1222] dark:text-[#D5D5D5]">
+            <Link
+                href="/"
+                aria-label="Back to home"
+                className="absolute left-4 top-4 inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/75 text-black shadow-sm backdrop-blur transition hover:bg-white active:translate-y-px dark:border-white/10 dark:bg-white/10 dark:text-[#D5D5D5] dark:hover:bg-white/15"
+            >
+                <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            </Link>
+
             <div className="absolute right-4 top-4">
                 <ThemeToggle />
             </div>
@@ -92,8 +89,7 @@ async function AuthContent({
 }) {
     const session = await auth();
     const params = (await searchParams) ?? {};
-    const rawCallbackUrl = getStringParam(params.callbackUrl).trim() || "/";
-    const redirectCallbackUrl = normalizeCallbackUrl(rawCallbackUrl);
+    const redirectCallbackUrl = normalizeAuthCallbackPath(params.callbackUrl);
 
     if (session?.user) {
         redirect(redirectCallbackUrl);
@@ -101,7 +97,7 @@ async function AuthContent({
 
     return (
         <AuthClient
-            callbackUrl={rawCallbackUrl}
+            callbackUrl={redirectCallbackUrl}
             error={getStringParam(params.error)}
         />
     );

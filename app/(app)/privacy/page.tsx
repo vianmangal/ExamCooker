@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPage, { type LegalSection } from "@/app/(app)/legal/legal-page";
 
-const UPDATED_AT = "May 1, 2026";
+const UPDATED_AT = "May 6, 2026";
 
 export const metadata: Metadata = {
     title: "Privacy Policy",
@@ -25,7 +25,7 @@ const sections: LegalSection[] = [
         body: [
             {
                 label: "Account data.",
-                text: "When you sign in with Google or Apple, ExamCooker stores account records such as your user ID, email, name, profile image when provided, email verification time, role, provider account ID, and authentication fields needed to operate sign-in.",
+                text: "When you sign in with Google or Apple, ExamCooker stores account records such as your user ID, email, name, profile image when provided, email verification time, role, provider account ID, OAuth scope, token type, token expiry, and authentication tokens or fields needed to operate sign-in.",
             },
             {
                 label: "Sessions and access.",
@@ -50,6 +50,13 @@ const sections: LegalSection[] = [
         ],
     },
     {
+        id: "payments",
+        title: "Payments",
+        body: [
+            "ExamCooker does not currently sell paid digital content, subscriptions, premium features, physical goods, or bundled physical and digital purchases in the app.",
+        ],
+    },
+    {
         id: "how-we-use-data",
         title: "How We Use Data",
         body: [
@@ -58,24 +65,59 @@ const sections: LegalSection[] = [
         ],
     },
     {
-        id: "third-parties",
-        title: "Third Parties",
+        id: "google-user-data",
+        title: "Google User Data",
         body: [
             {
-                label: "Google and Apple.",
-                text: "Google OAuth and Sign in with Apple are used for sign-in.",
+                label: "Data accessed.",
+                text: "If you choose Google sign-in, ExamCooker asks Google for basic account identity information: your Google account email address, display name, profile image or avatar when Google provides one, email verification status, and Google account identifier. The app also receives OAuth authentication data needed to create and maintain your ExamCooker session, such as the provider account ID, OAuth scope, token type, token expiry, and sign-in tokens.",
             },
             {
-                label: "Hosting, database, and storage providers.",
-                text: "Application data, public PDFs, thumbnails, and generated metadata are stored using the configured database, object storage, and upload-processing services.",
+                label: "Data usage.",
+                text: "ExamCooker uses Google user data only to authenticate you, create or find your ExamCooker account, show your account identity inside the app, prevent duplicate accounts, protect account access, maintain sessions, support account deletion, and associate your uploads, forum actions, bookmarks, view history, CLI tokens, and moderation actions with the correct signed-in user.",
             },
             {
-                label: "OpenAI.",
-                text: "AI title generation, voice guide sessions, and PDF question-answering can send relevant prompts, document context, and file URLs to OpenAI.",
+                label: "Data storage.",
+                text: "Google user data used for sign-in is stored in ExamCooker's authentication database for as long as your account is active or as long as needed for security, moderation, backups, and service operation. You can request deletion of account-linked data from the account deletion page.",
             },
             {
-                label: "PostHog and Google Analytics.",
-                text: "When configured, these services collect product analytics, page views, feature events, errors, and AI usage telemetry.",
+                label: "Data sharing.",
+                text: "ExamCooker does not sell Google user data and does not use it for advertising. Google user data is shared only with service providers that operate ExamCooker, such as hosting, database, storage, analytics, and security infrastructure, and only as needed to run, secure, debug, and improve the service.",
+            },
+            {
+                label: "Limited Google access.",
+                text: "ExamCooker does not request access to Google Drive, Gmail, Google Calendar, Google Contacts, or other Google API content. Google sign-in is used only for account authentication and basic profile identity.",
+            },
+        ],
+    },
+    {
+        id: "third-party-processors",
+        title: "Third-Party Processors",
+        body: [
+            "ExamCooker uses third-party processors to provide authentication, hosting, storage, analytics, AI features, upload processing, security, and operational infrastructure. These processors are permitted to process personal data only for the service purposes described in this policy.",
+            {
+                label: "Authentication providers.",
+                text: "Google and Apple process sign-in requests and return account identity information when you choose those sign-in methods.",
+            },
+            {
+                label: "Hosting, database, and object storage providers.",
+                text: "Microsoft Azure processes hosting, application runtime, logs, backups, uploaded PDFs, thumbnails, generated metadata, and public study resources. Azure Blob Storage and Google Cloud Storage process stored file assets. CockroachDB processes account records, authentication records, uploads metadata, bookmarks, view history, moderation records, and other application database records.",
+            },
+            {
+                label: "Upload-processing services.",
+                text: "Configured upload processors may receive uploaded PDFs and related metadata to validate files, generate thumbnails, extract or normalize document data, and return file URLs or processed results.",
+            },
+            {
+                label: "AI providers.",
+                text: "OpenAI may process prompts, questions, selected document context, document URLs, voice-session data, model settings, generated responses, timing, usage, and error information when AI or voice features are used.",
+            },
+            {
+                label: "Analytics providers.",
+                text: "PostHog and Google Analytics may process page views, product events, device and browser information, approximate location derived from network data, session identifiers, signed-in user identifiers when configured, performance data, and error or AI usage telemetry.",
+            },
+            {
+                label: "Security, cache, and rate-limit providers.",
+                text: "Upstash Redis may process IP addresses, request metadata, timestamps, counters, cached values, and abuse-prevention or rate-limit signals when Redis-backed security, cache, or rate-limit features are configured.",
             },
         ],
     },
@@ -87,17 +129,16 @@ const sections: LegalSection[] = [
             {
                 text: (
                     <>
-                        To request deletion of account-linked data, use the{" "}
+                        To delete account-linked data, use the{" "}
                         <Link
                             href="/delete"
                             className="font-semibold text-black underline decoration-black/30 underline-offset-4 transition hover:decoration-black dark:text-[#D5D5D5] dark:decoration-[#D5D5D5]/30 dark:hover:text-[#3BF4C7] dark:hover:decoration-[#3BF4C7]"
                         >
-                            account deletion request page
+                            account deletion page
                         </Link>{" "}
-                        or contact the maintainers through the official channels linked
-                        in the site footer. Some public contributions may need to remain
-                        available or be retained in moderation and backup records where
-                        required to operate the service.
+                        in the app. Some public contributions may remain available
+                        without your personal account details or be retained in backup
+                        records where required to operate the service.
                     </>
                 ),
             },

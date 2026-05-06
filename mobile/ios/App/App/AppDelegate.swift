@@ -2,14 +2,18 @@ import UIKit
 import Capacitor
 import WebKit
 
+private let appShellBackgroundColor = UIColor(red: 0.047, green: 0.071, blue: 0.133, alpha: 1)
+
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    private var didRegisterLocalPlugins = false
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        configureWindowBackground()
         DispatchQueue.main.async { [weak self] in
-            self?.configureWebViewChrome()
+            self?.configureAppShell()
         }
         return true
     }
@@ -29,7 +33,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        configureWebViewChrome()
+        configureAppShell()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
@@ -52,20 +56,51 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 private extension AppDelegate {
-    func configureWebViewChrome() {
-        let backgroundColor = UIColor(red: 0.047, green: 0.071, blue: 0.133, alpha: 1)
-        window?.backgroundColor = backgroundColor
-        window?.rootViewController?.view.backgroundColor = backgroundColor
+    func configureAppShell() {
+        configureWindowBackground()
+        configureWebViewChrome()
+        registerLocalPluginsIfNeeded()
+    }
 
+    func configureWindowBackground() {
+        window?.backgroundColor = appShellBackgroundColor
+        window?.rootViewController?.view.backgroundColor = appShellBackgroundColor
+        window?.rootViewController?.view.superview?.backgroundColor = appShellBackgroundColor
+    }
+
+    func configureWebViewChrome() {
         guard let rootView = window?.rootViewController?.view else { return }
+        rootView.backgroundColor = appShellBackgroundColor
         for webView in rootView.findSubviews(ofType: WKWebView.self) {
-            webView.backgroundColor = backgroundColor
+            webView.superview?.backgroundColor = appShellBackgroundColor
+            webView.backgroundColor = appShellBackgroundColor
             webView.isOpaque = false
-            webView.scrollView.backgroundColor = backgroundColor
+            if #available(iOS 15.0, *) {
+                webView.underPageBackgroundColor = appShellBackgroundColor
+            }
+            webView.scrollView.backgroundColor = appShellBackgroundColor
             webView.scrollView.bounces = false
             webView.scrollView.alwaysBounceVertical = false
             webView.scrollView.alwaysBounceHorizontal = false
         }
+    }
+
+    func registerLocalPluginsIfNeeded() {
+        guard !didRegisterLocalPlugins else { return }
+        guard let bridgeViewController = window?.rootViewController as? CAPBridgeViewController else { return }
+        guard let bridge = bridgeViewController.bridge else { return }
+
+        let plugins: [CAPPlugin & CAPBridgedPlugin] = [
+            NativeAppleSignIn(),
+            NativeDownloads(),
+            NativeCourseSearch()
+        ]
+
+        for plugin in plugins where bridge.plugin(withName: plugin.jsName) == nil {
+            bridge.registerPluginInstance(plugin)
+        }
+
+        didRegisterLocalPlugins = true
     }
 }
 
